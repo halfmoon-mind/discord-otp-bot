@@ -6,10 +6,12 @@ export default {
 
     const i = JSON.parse(body);
     if (i.type === 1) return Response.json({ type: 1 }); // Discord PING
+    if (i.type !== 2 || i.data?.type !== 1 || i.data?.name !== 'code') return new Response('unsupported interaction', { status: 400 });
     if (i.guild_id !== env.GUILD_ID) return reply('지정된 서버에서만 쓸 수 있음');
 
-    const left = 30 - (Math.floor(Date.now() / 1000) % 30);
-    return reply(`OTP: \`${await totp(env.TOTP_SECRET)}\` (${left}초 남음)`);
+    const now = Date.now();
+    const left = 30 - (Math.floor(now / 1000) % 30);
+    return reply(`OTP: \`${await totp(env.TOTP_SECRET, now)}\` (${left}초 남음)`);
   },
 };
 
@@ -31,7 +33,11 @@ async function verify(req, body, publicKey) {
 // RFC 6238 TOTP (SHA-1, 30초, 6자리) — 구글 Authenticator와 동일
 export async function totp(secret, now = Date.now()) {
   const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  const bits = [...secret.toUpperCase().replace(/[\s=]/g, '')].map((c) => A.indexOf(c).toString(2).padStart(5, '0')).join('');
+  const normalized = secret.toUpperCase().replace(/\s/g, '').replace(/=+$/, '');
+  if (!/^[A-Z2-7]+$/.test(normalized) || [1, 3, 6].includes(normalized.length % 8)) {
+    throw new Error('Invalid Base32 TOTP secret');
+  }
+  const bits = [...normalized].map((c) => A.indexOf(c).toString(2).padStart(5, '0')).join('');
   const keyBytes = Uint8Array.from(bits.match(/.{8}/g), (b) => parseInt(b, 2));
 
   const msg = new DataView(new ArrayBuffer(8));

@@ -1,23 +1,50 @@
+<div align="center">
+
 # discord-otp-bot
 
-![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)
-![Discord](https://img.shields.io/badge/Discord-Slash_Command-5865F2?logo=discord&logoColor=white)
-![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-blue)
+**공유 계정의 2단계 인증, 디스코드 `/code` 한 번으로.**
 
-> 여러 명이 함께 쓰는 계정의 **2단계 인증 OTP**를 디스코드 `/code` 한 번으로 받는 봇.
+계정 주인의 폰을 기다리지 않고 OTP 키를 나누지 않고 로그인하세요.
 
-공유 계정에 2단계 인증을 걸면 로그인할 때마다 계정 주인 폰으로 승인 요청이 갑니다. 이 봇을 쓰면 OTP 키는 봇만 갖고 있고, 멤버는 디스코드에서 `/code`를 쳐서 현재 6자리 코드만 받습니다. 주인 폰이 필요 없고 OTP 키를 나눠줄 필요도 없어요.
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
+[![Discord](https://img.shields.io/badge/Discord-Slash_Command-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.com/developers/applications)
+![Dependencies](https://img.shields.io/badge/dependencies-0-80D4B1?style=flat-square)
+[![License](https://img.shields.io/badge/license-MIT-A8A5FF?style=flat-square)](LICENSE)
 
-구글처럼 **인증 앱(Google Authenticator 등)** 방식 2단계 인증을 지원하는 서비스라면 어디든 쓸 수 있습니다.
+[처음 설치하기](#처음-설치하기) · [동작 방식](#동작-방식) · [멤버 안내](#멤버-안내-공지) · [문제 해결](#문제-해결)
 
-## 특징
+</div>
 
-- **OTP 키 비공개**: 키는 Cloudflare Secret에만 저장됩니다. 멤버가 빠져도 키를 다시 등록할 필요가 없어요.
-- **비밀번호와 분리**: 봇은 OTP만 다룹니다. 디스코드 계정이 털려도 비밀번호 없이는 로그인할 수 없어요.
-- **나만 보이는 응답**: 코드는 요청한 사람에게만 보이고 채팅 기록에 남지 않습니다.
-- **서버·역할 제한**: 지정한 서버의 허용된 역할만 사용할 수 있습니다.
-- **무료 · 서버 불필요**: Cloudflare Workers 무료 플랜에서 돌아갑니다. 의존성 0개, 코드 약 40줄이에요.
+---
+
+공유 계정에 2단계 인증을 걸면 로그인할 때마다 계정 주인 폰으로 승인 요청이 갑니다. 이 봇을 쓰면 OTP 키는 봇만 갖고 있고 멤버는 디스코드에서 `/code`를 쳐서 현재 6자리 코드만 받습니다. 주인 폰 없이도 로그인할 수 있고 OTP 키를 나눠줄 필요도 없어요.
+
+구글처럼 2단계 인증을 **인증 앱(Google Authenticator 등)** 방식으로 지원한다면 어떤 서비스든 쓸 수 있습니다.
+
+## ✨ 특징
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>🔐 OTP 키 비공개</strong><br />
+      키는 Cloudflare Secret에만 저장돼요. 멤버에게는 현재 코드만 전달합니다.
+    </td>
+    <td width="50%" valign="top">
+      <strong>👀 나만 보이는 응답</strong><br />
+      요청한 사람에게만 코드를 표시하고 채팅 기록에는 남기지 않아요.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <strong>🛡️ 서버·역할 제한</strong><br />
+      지정한 서버의 허용된 역할만 사용할 수 있습니다. (비밀번호는 봇이 다루지 않아요.)
+    </td>
+    <td valign="top">
+      <strong>☁️ 가볍게, 서버 없이</strong><br />
+      의존성 0개, 코드 약 40줄로 Cloudflare Workers 무료 플랜에서 동작해요.
+    </td>
+  </tr>
+</table>
 
 ## 동작 방식
 
@@ -38,7 +65,14 @@ sequenceDiagram
 
 ## 처음 설치하기
 
-전체 약 15분 걸립니다. 순서대로 진행하세요. 특히 **3 → 4번 순서가 중요**합니다.
+**⏱️ 약 15분** · 아래 순서대로 진행하면 됩니다.
+
+| 01 — 연결 준비 | 02 — 배포·연결 | 03 — 사용 설정 |
+|---|---|---|
+| 저장소 받기 → 디스코드 앱 만들기 | Worker 배포 → 엔드포인트 연결 → 앱 설치 | `/code` 등록 → OTP 키 등록 → 역할 제한 → 확인 |
+
+> [!IMPORTANT]
+> **3 → 4번 순서가 중요합니다.** Cloudflare에 `DISCORD_PUBLIC_KEY`를 먼저 등록한 뒤 디스코드 엔드포인트를 연결하세요.
 
 ### 준비물
 
@@ -73,12 +107,14 @@ npx wrangler secret put DISCORD_PUBLIC_KEY   # 프롬프트에 PUBLIC_KEY 붙여
 npx wrangler secret put GUILD_ID             # 프롬프트에 GUILD_ID 붙여넣기
 ```
 
+> [!TIP]
 > Worker 이름(주소)은 `wrangler.toml`의 `name`으로 정해집니다. 배포한 뒤에 바꾸면 새 Worker가 생기니 처음에 정하세요.
 
 ### 4. 디스코드에 엔드포인트 연결
 
 개발자 포털 → **일반 정보** → **인터랙션 엔드포인트 URL**에 3번 주소를 넣고 저장합니다.
 
+> [!NOTE]
 > 저장할 때 디스코드가 서명 테스트 요청을 보냅니다. 3번에서 `DISCORD_PUBLIC_KEY`를 먼저 넣어야 저장돼요.
 
 ### 5. 서버에 앱 설치
@@ -100,7 +136,7 @@ curl -X PUT "https://discord.com/api/v10/applications/APP_ID/guilds/GUILD_ID/com
   -d '[{"name":"code","description":"공유 계정 로그인 OTP"}]'
 ```
 
-3. 응답에 `"name":"code"`가 보이면 성공입니다. **토큰을 한 번 더 초기화**하고 복사하지 마세요. 봇 토큰은 이후 쓸 일이 없고, 새면 채널 메시지를 읽힐 수 있어요.
+3. 응답에 `"name":"code"`가 보이면 성공입니다. **토큰을 한 번 더 초기화**하고 복사하지 마세요. 봇 토큰은 이후 쓸 일이 없고 새면 채널 메시지가 읽힐 수 있어요.
 
 > macOS가 아니면 `$(pbpaste)` 대신 토큰을 직접 붙여넣으세요.
 
@@ -129,7 +165,8 @@ npx wrangler secret put TOTP_SECRET   # 프롬프트에 키 붙여넣기 (공백
 
 디스코드에서 `/code`를 칩니다. 나온 6자리가 **내 폰 인증 앱의 코드와 같으면** 설치 완료입니다.
 
-마지막으로 아래 [멤버 안내 공지](#멤버-안내-공지)를 채널에 올리고 고정하세요.
+> [!TIP]
+> 설치를 마쳤다면 아래 [멤버 안내 공지](#멤버-안내-공지)를 채널에 올리고 고정하세요.
 
 ---
 
@@ -160,6 +197,9 @@ npx wrangler secret put TOTP_SECRET   # 프롬프트에 키 붙여넣기 (공백
 OTP 키는 아무도 본 적이 없으니 다시 등록할 필요가 없습니다.
 
 ## 보안 메모
+
+> [!IMPORTANT]
+> OTP 키를 보관하는 **Cloudflare 계정의 2단계 인증**도 반드시 켜세요.
 
 | 위협 | 대응 |
 |---|---|
@@ -196,3 +236,12 @@ npx wrangler deploy    # 수정 후 재배포 (secret은 유지됨)
 ## License
 
 [MIT](LICENSE)
+
+---
+
+<div align="center">
+
+**명령어 한 번이면 나에게만 보이는 여섯 자리가 뜹니다.**<br />
+Discord · Cloudflare Workers · Web Crypto
+
+</div>

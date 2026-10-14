@@ -236,12 +236,3 @@ npx wrangler deploy    # 수정 후 재배포 (secret은 유지됨)
 ## License
 
 [MIT](LICENSE)
-
----
-
-<div align="center">
-
-**명령어 한 번이면 나에게만 보이는 여섯 자리가 뜹니다.**<br />
-Discord · Cloudflare Workers · Web Crypto
-
-</div>
